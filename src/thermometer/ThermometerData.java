@@ -1,6 +1,5 @@
 package thermometer;
 
-import java.text.NumberFormat;
 import java.util.Random;
 
 public class ThermometerData {
@@ -34,7 +33,7 @@ public class ThermometerData {
         }
     }
 
-    private void addHighTemp(int temp) {
+    public void addHighTemp(int temp) {
         int index = 0;
         while(index < 5 && temp < highestTemps[index])
             index++;
@@ -43,7 +42,7 @@ public class ThermometerData {
         highestTemps[index] = temp;
     }
 
-    private void addLowTemp(int temp) {
+    public void addLowTemp(int temp) {
         int index = 0;
         while(index < 5 && temp > lowestTemps[index])
             index++;
@@ -53,54 +52,74 @@ public class ThermometerData {
         }
     }
 
-    private int tempDiffTenMinute() {
-        return this.tempDifferenceTenMinute[1] - this.tempDifferenceTenMinute[0];
-    }
-
     public void run(long seed) {
         Random random = new Random(seed);
         int[] highTempTenMinute = {0, Integer.MIN_VALUE};
         int[] lowTempTenMinute = {0, Integer.MAX_VALUE};
         for(int i = 0; i < 60; i++) {
-            int temp = random.nextInt(171) - 100;
-            if(highTempTenMinute[1] < temp) {
-                if(i - lowTempTenMinute[0] <= 10) {
-                    tenMinuteDifference[0] = tenMinuteDifference[1];
-                    tenMinuteDifference[1] = i;
-                    tempDifferenceTenMinute[1] = temp; 
-                }
-                highTempTenMinute[0] = i;
-                highTempTenMinute[1] = temp;
-            }
-            if(lowTempTenMinute[1] > temp) {
-                if(i - highTempTenMinute[0] <= 10) {
+            int temp = (int) (random.nextGaussian()*20 - 10);
+            if(temp < lowTempTenMinute[1]) {
+                lowTempTenMinute[0] = i;
+                lowTempTenMinute[1] = temp;
+                if(i - highTempTenMinute[0] <= 10)  {
                     tenMinuteDifference[0] = tenMinuteDifference[1];
                     tenMinuteDifference[1] = i;
                     tempDifferenceTenMinute[0] = temp;
                 }
-                lowTempTenMinute[0] = i;
-                lowTempTenMinute[1] = temp;
             }
-            System.out.println(temp);
+            if(temp > highTempTenMinute[1]) {
+                highTempTenMinute[0] = i;
+                highTempTenMinute[1] = temp;
+                if(i - lowTempTenMinute[0] <= 10)  {
+                    tenMinuteDifference[0] = tenMinuteDifference[1];
+                    tenMinuteDifference[1] = i;
+                    tempDifferenceTenMinute[1] = temp;
+                }
+            }
+            if(Math.abs(lowTempTenMinute[0] - highTempTenMinute[0]) <= 10) {
+                tenMinuteDifference[0] = lowTempTenMinute[0] < highTempTenMinute[0] ? lowTempTenMinute[0] : highTempTenMinute[0];
+                tenMinuteDifference[1] = lowTempTenMinute[0] > highTempTenMinute[0] ? lowTempTenMinute[0] : highTempTenMinute[0];
+                tempDifferenceTenMinute[0] = lowTempTenMinute[1];
+                tempDifferenceTenMinute[1] = highTempTenMinute[1];
+            }
             addHighTemp(temp);
             addLowTemp(temp);
         }
     }
 
+    public int getTempDifference() {
+        return tempDifferenceTenMinute[1] - tempDifferenceTenMinute[0];
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Lowest temps: {\t");
+        sb.append("Lowest temps: {");
         for(int i = 0; i < 5; i++) {
             sb.append(String.format("%d\t", lowestTemps[i]));
         }
         sb.append("}\n");
-        sb.append("Highest temps: {\t");
+        sb.append("Highest temps: {");
         for(int i = 0; i < 5; i++) {
             sb.append(String.format("%d\t", highestTemps[i]));
         }
         sb.append("}\n");
         sb.append(String.format("Largest Difference in 10-minute span: [%d, %d]\n", tenMinuteDifference[0], tenMinuteDifference[1]));
         return sb.toString();
+    }
+
+    public void setTenMinDiff(int[] time) {
+        this.tenMinuteDifference = time;
+    }
+
+    public int[] getHighTemps() {
+        return this.highestTemps;
+    }
+
+    public int[] getLowTemps() {
+        return this.lowestTemps;
+    }
+    public int[] getTimeSpan() {
+        return this.tenMinuteDifference;
     }
 }
